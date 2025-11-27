@@ -13,7 +13,7 @@ jobs:
     name: Node.js App with SonarQube Integration
 
     env:
-      WORK_DIR: calc-frontend, calc-frontend/src   # change if app is inside a folder (example: app, src/app)
+      WORK_DIR: calc-frontend   # change if app is inside a folder (example: app, src/app)
 
     steps:
       # -------------------------------------------------------
