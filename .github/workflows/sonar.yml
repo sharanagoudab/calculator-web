@@ -67,8 +67,8 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
           args: >
-            -Dsonar.projectKey=nodejs-app
-            -Dsonar.projectName=NodeJS-App
+            -Dsonar.projectKey=calc-frontend
+            -Dsonar.projectName=calc-frontend
             -Dsonar.sources=${{ env.WORK_DIR }}
             -Dsonar.exclusions=${{ env.WORK_DIR }}/node_modules/**,${{ env.WORK_DIR }}/coverage/**
             -Dsonar.javascript.lcov.reportPaths=${{ env.WORK_DIR }}/coverage/lcov.info
