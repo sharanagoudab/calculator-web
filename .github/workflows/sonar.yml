@@ -1,4 +1,4 @@
-name: SonarQube Scan
+name: SonarQube Analysis - Node.js App
 
 on:
   push:
@@ -8,40 +8,63 @@ on:
   workflow_dispatch:
 
 jobs:
-  scan:
-    runs-on: linux-runner
+  sonarqube:
+    name: SonarQube Code Scan
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      # ------------------------------------
+      # 1. Checkout code
+      # ------------------------------------
+      - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # required for correct blame/PR analysis
 
-      - name: Setup Node
+      # ------------------------------------
+      # 2. Setup Node.js
+      # ------------------------------------
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: '18'
+          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
-        working-directory: ./calc-frontend
+      # ------------------------------------
+      # 3. Install Dependencies
+      # ------------------------------------
+      - name: Install Dependencies
+        run: npm ci
 
-      - name: Build App
-        run: npm run build
-        working-directory: ./calc-frontend
+      # ------------------------------------
+      # 4. Run Unit Tests + Coverage
+      # ------------------------------------
+      - name: Run Tests
+        run: |
+          npm test -- --coverage
 
-      - name: Run Tests with Coverage
-        run: npm test -- --coverage --watchAll=false || true
-        working-directory: ./calc-frontend
-
+      # ------------------------------------
+      # 5. Run SonarQube Scan
+      # ------------------------------------
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v3
+        uses: sonarsource/sonarqube-scan-action@v2
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
           args: >
-            -Dsonar.projectKey=calc-frontend
-            -Dsonar.sources=calc-frontend/src
-            -Dsonar.exclusions=**/*.test.js,**/*.test.jsx,node_modules/**
-            -Dsonar.javascript.lcov.reportPaths=calc-frontend/coverage/lcov.info
+            -Dsonar.projectKey=nodejs-app
+            -Dsonar.projectName=NodeJS-App
+            -Dsonar.sources=.
+            -Dsonar.exclusions=**/node_modules/**,coverage/**
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+
+      # ------------------------------------
+      # 6. Quality Gate Check
+      # ------------------------------------
+      - name: SonarQube Quality Gate
+        uses: sonarsource/sonarqube-quality-gate-action@v1
+        timeout-minutes: 10
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
